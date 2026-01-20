@@ -36,7 +36,7 @@ void Game::initVulkan() {
         vulkanSwapchain->getExtent());
     vulkanPipeline->createPipeline();
 
-    vulkanRenderer = new VulkanRenderer(vulkanContext, vulkanSwapchain, vulkanPipeline);
+    vulkanRenderer = new VulkanRenderer(vulkanContext, vulkanSwapchain, vulkanPipeline, WIDTH, HEIGHT);
     vulkanRenderer->create();
 
     camera = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));

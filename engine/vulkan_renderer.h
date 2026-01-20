@@ -11,7 +11,7 @@ class VulkanBuffer;
 
 class VulkanRenderer {
 public:
-    VulkanRenderer(VulkanContext* contextIn, VulkanSwapchain* swapchainIn, VulkanPipeline* pipelineIn);
+    VulkanRenderer(VulkanContext* contextIn, VulkanSwapchain* swapchainIn, VulkanPipeline* pipelineIn, uint32_t widthIn, uint32_t heightIn);
     ~VulkanRenderer();
 
     void create();
@@ -35,6 +35,9 @@ private:
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
     std::vector<VkFence> inFlightFences;
+
+    uint32_t height;
+    uint32_t width;
 
     const int MAX_FRAMES_IN_FLIGHT = 2;
     size_t currentFrame = 0;

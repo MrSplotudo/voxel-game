@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <array>
 
-VulkanRenderer::VulkanRenderer(VulkanContext* contextIn, VulkanSwapchain* swapchainIn, VulkanPipeline* pipelineIn) : context(contextIn), swapchain(swapchainIn), pipeline(pipelineIn) {
+VulkanRenderer::VulkanRenderer(VulkanContext* contextIn, VulkanSwapchain* swapchainIn, VulkanPipeline* pipelineIn, uint32_t widthIn, uint32_t heightIn) : context(contextIn), swapchain(swapchainIn), pipeline(pipelineIn), width(widthIn), height(heightIn) {
 }
 
 VulkanRenderer::~VulkanRenderer() {
@@ -157,7 +157,7 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
 
     glm::mat4 projection = glm::perspective(
         glm::radians(85.0f),
-        800.0f / 800.0f,
+        static_cast<float>(width) / static_cast<float>(height),
         0.1f,
         100.0f);
 

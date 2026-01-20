@@ -41,7 +41,7 @@ public:
             position += right * velocity;
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
             position.y += velocity;
-        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
             position.y -= velocity;
     }
 
