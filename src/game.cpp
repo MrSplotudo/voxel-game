@@ -3,7 +3,9 @@
 #include "../engine/vulkan_swapchain.h"
 #include "../engine/vulkan_pipeline.h"
 #include "../engine/vulkan_renderer.h"
+#include "../engine/vulkan_texture.h"
 #include <iostream>
+#include <string>
 
 void Game::run() {
     initWindow();
@@ -38,6 +40,9 @@ void Game::initVulkan() {
 
     vulkanRenderer = new VulkanRenderer(vulkanContext, vulkanSwapchain, vulkanPipeline, WIDTH, HEIGHT);
     vulkanRenderer->create();
+
+    vulkanTexture = new VulkanTexture(vulkanContext->getDevice(), vulkanContext->getPhysicalDevice());
+    vulkanTexture->load("../textures/dirt.png");
 
     camera = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));
 }

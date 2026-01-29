@@ -7,6 +7,8 @@ class VulkanContext;
 class VulkanSwapchain;
 class VulkanPipeline;
 class VulkanRenderer;
+class VulkanTexture;
+
 
 class Game {
 public:
@@ -23,6 +25,7 @@ private:
     VulkanSwapchain* vulkanSwapchain = nullptr;
     VulkanPipeline* vulkanPipeline = nullptr;
     VulkanRenderer* vulkanRenderer = nullptr;
+    VulkanTexture* vulkanTexture = nullptr;
 
     Camera* camera = nullptr;
     float lastFrame = 0.0f;

@@ -15,6 +15,7 @@ set(ENGINE_SOURCES
         engine/vulkan_pipeline.cpp
         engine/vulkan_swapchain.cpp
         engine/vulkan_renderer.cpp
+        engine/vulkan_texture.cpp
 )
 
 set(GAME_SOURCES

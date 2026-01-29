@@ -13,7 +13,6 @@ class VulkanSwapchain {
 public:
     VulkanSwapchain(VkPhysicalDevice physicalDeviceIn, VkDevice deviceIn, VkSurfaceKHR surfaceIn);
     ~VulkanSwapchain();
-
     void create(uint32_t widthIn, uint32_t heightIn);
     void cleanup();
 

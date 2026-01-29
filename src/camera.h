@@ -43,6 +43,11 @@ public:
             position.y += velocity;
         if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
             position.y -= velocity;
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+            speed = 6.0f;
+        } else {
+            speed = 2.5f;
+        }
     }
 
     void processMouse(float xOffset, float yOffset) {
