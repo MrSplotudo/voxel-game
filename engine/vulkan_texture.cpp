@@ -1,5 +1,5 @@
 #define STB_IMAGE_IMPLEMENTATION
-#include "../third_party/stb/stb_image.h"
+#include "stb_image.h"
 #include "vulkan_texture.h"
 #include <iostream>
 #include <stdexcept>
