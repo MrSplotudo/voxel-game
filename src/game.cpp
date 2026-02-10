@@ -6,9 +6,9 @@
 #include "../engine/vulkan_texture.h"
 #include "../engine/vulkan_buffer.h"
 #include "../engine/vulkan_vertex.h"
-#include "../third_party/imgui.h"
-#include "../third_party/imgui_impl_vulkan.h"
-#include "../third_party/imgui_impl_glfw.h"
+#include "../third_party/imgui/imgui.h"
+#include "../third_party/imgui/backends/imgui_impl_vulkan.h"
+#include "../third_party/imgui/backends/imgui_impl_glfw.h"
 #include <iostream>
 #include <string>
 

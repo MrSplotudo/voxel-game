@@ -25,13 +25,13 @@ set(GAME_SOURCES
 )
 
 set(THIRD_PARTY_SOURCES
-        third_party/imgui.cpp
-        third_party/imgui_draw.cpp
-        third_party/imgui_tables.cpp
-        third_party/imgui_widgets.cpp
-        third_party/imgui_demo.cpp
-        third_party/imgui_impl_glfw.cpp
-        third_party/imgui_impl_vulkan.cpp
+        third_party/imgui/imgui.cpp
+        third_party/imgui/imgui_draw.cpp
+        third_party/imgui/imgui_tables.cpp
+        third_party/imgui/imgui_widgets.cpp
+        third_party/imgui/imgui_demo.cpp
+        third_party/imgui/backends/imgui_impl_glfw.cpp
+        third_party/imgui/backends/imgui_impl_vulkan.cpp
 )
 
 add_executable(${PROJECT_NAME} ${ENGINE_SOURCES} ${GAME_SOURCES} ${THIRD_PARTY_SOURCES})
@@ -44,5 +44,6 @@ target_link_libraries(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${GLFW_DIR}/include
         "${CMAKE_SOURCE_DIR}/../../01.02 - vulkan_sdk/Include"
-        "third_party"
+        "third_party/imgui"
+        "third_party/stb"
 )

@@ -5,7 +5,7 @@
 #include "vulkan_buffer.h"
 #include "vulkan_vertex.h"
 #include "glm/gtc/matrix_transform.hpp"
-#include "../third_party/imgui_impl_vulkan.h"
+#include "../third_party/imgui/backends/imgui_impl_vulkan.h"
 #include <stdexcept>
 #include <array>
 
