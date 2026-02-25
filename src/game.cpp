@@ -58,7 +58,7 @@ void Game::initGame() {
     sceneLoader->load("../levels/lab.json", gameObjects);
 
     character = new Character(vulkanContext, vulkanPipeline, physicsWorld);
-    character->spawn({0.0f, 10.0f, 0.0f});
+    character->spawn({0.0f, 20.0f, 0.0f});
 
     projectileManager = new ProjectileManager(physicsWorld, vulkanContext, vulkanPipeline);
     projectileManager->init("../assets/models/bullet.obj", "../assets/textures/bullet_texture.png");
@@ -102,8 +102,8 @@ void Game::mainLoop() {
 
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
             ProjectileProperties props;
-            props.speed   = 60.0f;
-            props.lifespan = 1.0f;
+            props.speed   = 5.0f;
+            props.lifespan = 10.0f;
 
             glm::vec3 spawnPos = character->getBarrelTip();
             projectileManager->spawn(spawnPos, fireDirection, props);
