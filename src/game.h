@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include "game_object.h"
+#include "projectile_manager.h"
 
 class VulkanContext;
 class VulkanSwapchain;
@@ -11,6 +12,9 @@ class VulkanRenderer;
 class VulkanTexture;
 class VulkanBuffer;
 class PhysicsWorld;
+class SceneLoader;
+class Character;
+class ProjectileManager;
 class Camera;
 class ProcessInput;
 class DebugUI;
@@ -33,8 +37,11 @@ private:
     DebugUI* debugUI = nullptr;
 
     PhysicsWorld* physicsWorld = nullptr;
+    SceneLoader* sceneLoader = nullptr;
 
-    std::vector<GameObject> gameObjects;
+    std::vector<GameObject> gameObjects = {};
+    Character* character = nullptr;
+    ProjectileManager* projectileManager = nullptr;
 
     Camera* camera = nullptr;
     ProcessInput* processInput = nullptr;
@@ -45,6 +52,6 @@ private:
     double lastMouseY = 400.0;
     bool firstMouse = true;
 
-    const uint32_t WIDTH = 1920;
-    const uint32_t HEIGHT = 1080;
+    const uint32_t WIDTH = 2550;
+    const uint32_t HEIGHT = 1440;
 };

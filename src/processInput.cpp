@@ -1,37 +1,37 @@
 #include "processInput.h"
-#include "transform.h"
-#include "glm/gtc/quaternion.hpp"
+#include "glm/ext/matrix_projection.hpp"
 
+ProcessInput::ProcessInput(GLFWwindow* windowIn ,JPH::BodyInterface* bodyInterfaceIn) : window(windowIn), bodyInterface(bodyInterfaceIn) {
 
-void ProcessInput::processKeyboard(GLFWwindow* window, float deltaTime, glm::vec3& position, float& yaw, float& pitch, float speed) {
-    glm::vec3 front;
-    front.x = cos(glm::radians(yaw));
-    front.y = 0.0f;
-    front.z = sin(glm::radians(yaw));
-    front = glm::normalize(front);
-
-    glm::vec3 right = glm::normalize(glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f)));
-    float velocity = speed * deltaTime;
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        position += front * velocity;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        position -= front * velocity;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        position -= right * velocity;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        position += right * velocity;
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        position.y += velocity;
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        position.y -= velocity;
 }
 
-void ProcessInput::processMouse(float xOffset, float yOffset, float& yaw, float& pitch) {
-    float sensitivity = 0.1f;
-    yaw += xOffset * sensitivity;
-    pitch -= yOffset * sensitivity;
+glm::vec3 ProcessInput::getWorldCursorPos(const glm::mat4& view, const glm::mat4& projection, uint32_t screenWidth, uint32_t screenHeight) {
+    double mouseX, mouseY;
+    glfwGetCursorPos(window, &mouseX, &mouseY);
+    mouseY = screenHeight - mouseY;
 
-    if (pitch > 89.0f) pitch = 89.0f;
-    if (pitch < -89.0f) pitch = -89.0f;
+    glm::vec4 viewport = glm::vec4(0.0f, 0.0f, screenWidth, screenHeight);
+
+
+    glm::vec3 nearPoint = glm::unProject(glm::vec3(mouseX, mouseY, 0.0f), view, projection, viewport);
+    glm::vec3 farPoint = glm::unProject(glm::vec3(mouseX, mouseY, 1.0f), view, projection, viewport);
+
+    glm::vec3 rayDir = glm::normalize(farPoint - nearPoint);
+
+    float t = -nearPoint.z / rayDir.z;
+    glm::vec3 worldPos = nearPoint + t * rayDir;
+    return worldPos;
+}
+
+InputState ProcessInput::getInputState() {
+    InputState input{};
+    // X axis
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) input.moveX += 1.0f;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) input.moveX -= 1.0f;
+
+    // Y axis
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) input.jump = true;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) input.fastFall = true;
+
+    return input;
 }

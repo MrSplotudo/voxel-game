@@ -1,17 +1,23 @@
 #pragma once
-#include <GLFW/glfw3.h>
 
-#include "transform.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
+#include "input_state.h"
+#include <GLFW/glfw3.h>
+#include <Jolt/Jolt.h>
+#include <Jolt/Physics/Body/Body.h>
+#include <Jolt/Physics/Body/BodyInterface.h>
+#include <glm/glm.hpp>
+
 
 class Camera;
 
 class ProcessInput {
 public:
+    ProcessInput(GLFWwindow* windowIn, JPH::BodyInterface* bodyInterfaceIn);
+    glm::vec3 getWorldCursorPos(const glm::mat4& view, const glm::mat4& projection, uint32_t screenWidth, uint32_t screenHeight);
+    InputState getInputState();
+    float aimAngle = 0.0f;
 
-
-    void processKeyboard(GLFWwindow* window, float deltaTime, glm::vec3& position, float& yaw, float& pitch, float speed);
-    void processMouse(float xOffset, float yOffset, float& yaw, float& pitch);
-
+private:
+    GLFWwindow* window;
+    JPH::BodyInterface* bodyInterface = nullptr;
 };

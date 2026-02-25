@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(Rounder)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Vulkan REQUIRED)
@@ -25,12 +25,15 @@ set(ENGINE_SOURCES
         engine/vulkan_texture.cpp
         engine/debug_ui.cpp
         engine/physics_world.cpp
+        engine/scene_loader.cpp
 )
 
 set(GAME_SOURCES
         src/main.cpp
         src/game.cpp
         src/processInput.cpp
+        src/character.cpp
+        src/projectile_manager.cpp
 )
 
 set(THIRD_PARTY_SOURCES
@@ -58,4 +61,5 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         "third_party/stb"
         "third_party/tinyobjloader"
         "third_party/JoltPhysics"
+        "third_party/json/include"
 )

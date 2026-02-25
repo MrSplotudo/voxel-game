@@ -32,14 +32,14 @@ void VulkanRenderer::create() {
     createSyncObjects();
 }
 
-void VulkanRenderer::drawObjects(const std::vector<GameObject>& objects, const glm::mat4& viewMatrix) {
+void VulkanRenderer::drawObjects(const std::vector<GameObject>& objects, const std::vector<Projectile>& projectiles, const glm::mat4& viewMatrix) {
     vkWaitForFences(context->getDevice(), 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
     vkResetFences(context->getDevice(), 1, &inFlightFences[currentFrame]);
 
     uint32_t imageIndex;
     vkAcquireNextImageKHR(context->getDevice(), swapchain->getHandle(), UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
     vkResetCommandBuffer(commandBuffers[imageIndex], 0);
-    recordCommandBuffer(commandBuffers[imageIndex], imageIndex, objects, viewMatrix);
+    recordCommandBuffer(commandBuffers[imageIndex], imageIndex, objects, projectiles, viewMatrix);
 
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -75,7 +75,7 @@ void VulkanRenderer::drawObjects(const std::vector<GameObject>& objects, const g
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, const std::vector<GameObject>& objects, const glm::mat4& viewMatrix) {
+void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, const std::vector<GameObject>& objects, const std::vector<Projectile>& projectiles, const glm::mat4& viewMatrix) {
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -109,6 +109,8 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
     projection[1][1] *= -1;
 
     for (const GameObject& object : objects) {
+        if (object.texture == nullptr || object.texture->getDescriptorSet() == VK_NULL_HANDLE) continue;
+
         glm::mat4 model;
         model = glm::translate(glm::mat4(1.0f), object.transform.position);
         model *= glm::mat4_cast(object.transform.rotation);
@@ -135,6 +137,30 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
         vkCmdBindIndexBuffer(commandBuffer, object.indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
         vkCmdDrawIndexed(commandBuffer, object.indexBuffer->getElementCount(), 1, 0, 0, 0);
     }
+
+    for (const Projectile& projectile : projectiles) {
+        if (projectile.texture == nullptr || projectile.texture->getDescriptorSet() == VK_NULL_HANDLE) continue;
+
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), projectile.transform.position);
+        model *= glm::mat4_cast(projectile.transform.rotation);
+        model = glm::scale(model, projectile.transform.scale);
+
+        glm::mat4 mvp = projection * viewMatrix * model;
+
+        vkCmdPushConstants(commandBuffer, pipeline->getPipelineLayout(),
+            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(mvp), &mvp);
+
+        VkDescriptorSet descriptorSets[] = {projectile.texture->getDescriptorSet()};
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipeline->getPipelineLayout(), 0, 1, descriptorSets, 0, nullptr);
+
+        VkBuffer buffers[] = {projectile.mesh->getBuffer()};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
+        vkCmdBindIndexBuffer(commandBuffer, projectile.indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
+        vkCmdDrawIndexed(commandBuffer, projectile.indexBuffer->getElementCount(), 1, 0, 0, 0);
+    }
+    
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
     vkCmdEndRenderPass(commandBuffer);

@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include "../src/game_object.h"
+#include "../src/projectile.h"
 
 
 class VulkanContext;
@@ -17,14 +18,14 @@ public:
     ~VulkanRenderer();
 
     void create();
-    void drawObjects(const std::vector<GameObject>& objects, const glm::mat4& viewMatrix);
+    void drawObjects(const std::vector<GameObject>& objects, const std::vector<Projectile>& projectiles, const glm::mat4& viewMatrix);
 
 private:
     void createFramebuffers();
     void createCommandPool();
     void createCommandBuffers();
     void createSyncObjects();
-    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, const std::vector<GameObject>& objects, const glm::mat4& viewMatrix);
+    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, const std::vector<GameObject>& objects, const std::vector<Projectile>& projectiles, const glm::mat4& viewMatrix);
 
     VulkanContext* context;
     VulkanSwapchain* swapchain;

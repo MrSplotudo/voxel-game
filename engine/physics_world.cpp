@@ -6,9 +6,13 @@
 #include <Jolt/Physics/PhysicsSettings.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include "Jolt/Physics/Collision/Shape/BoxShape.h"
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/NarrowPhaseQuery.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhaseQuery.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyID.h>
-
 
 void PhysicsWorld::create() {
     JPH::RegisterDefaultAllocator();
@@ -21,7 +25,7 @@ void PhysicsWorld::create() {
 
     physicsSystem->Init(maxBodies, numBodyMutexes, maxBodyPairs, maxContactConstraints, broadPhaseLayerInterface, objectVsBroadPhaseLayerFilter, objectLayerPairFilter);
 
-    physicsSystem->SetGravity(JPH::Vec3(0.0f, -9.81f, 0.0f));
+    physicsSystem->SetGravity(JPH::Vec3(0.0f, -10.0f, 0.0f));
 
     bodyInterface = &physicsSystem->GetBodyInterface();
 }
@@ -40,21 +44,38 @@ void PhysicsWorld::shutdown() {
     delete tempAllocator;
 }
 
-JPH::BodyID PhysicsWorld::createBody(JPH::Vec3 position, JPH::Vec3 halfExtents, JPH::EMotionType motionType, JPH::ObjectLayer layer) {
-    JPH::BoxShapeSettings shapeSettings(halfExtents);
-    JPH::ShapeSettings::ShapeResult shapeResult = shapeSettings.Create();
-    JPH::ShapeRefC shape = shapeResult.Get();
+JPH::BodyID PhysicsWorld::createBody(
+    JPH::Vec3 position,
+    JPH::Vec3 halfExtents,
+    JPH::EMotionType motionType,
+    JPH::ObjectLayer layer,
+    const std::string& shape,
+    JPH::EAllowedDOFs dofs)
+{
+    JPH::ShapeRefC finalShape;
+
+    if (shape == "capsule") {
+        // halfExtents.GetY() = total half-height, halfExtents.GetX() = radius
+        float radius = halfExtents.GetX();
+        float halfHeight = halfExtents.GetY() - radius; // cylindrical part only
+        if (halfHeight < 0.01f) halfHeight = 0.01f;
+        JPH::CapsuleShapeSettings shapeSettings(halfHeight, radius);
+        finalShape = shapeSettings.Create().Get();
+    } else {
+        JPH::BoxShapeSettings shapeSettings(halfExtents);
+        finalShape = shapeSettings.Create().Get();
+    }
 
     JPH::BodyCreationSettings bodySettings(
-        shape,
+        finalShape,
         position,
         JPH::Quat::sIdentity(),
         motionType,
         layer);
 
-    JPH::BodyID bodyID = bodyInterface->CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
+    bodySettings.mAllowedDOFs = dofs;
 
-    return bodyID;
+    return bodyInterface->CreateAndAddBody(bodySettings, JPH::EActivation::Activate);
 }
 
 JPH::Vec3 PhysicsWorld::getPosition(JPH::BodyID bodyID) {
@@ -65,3 +86,18 @@ JPH::Quat PhysicsWorld::getRotation(JPH::BodyID bodyID) {
     return bodyInterface->GetRotation(bodyID);
 }
 
+RayResult PhysicsWorld::castRay(JPH::Vec3 origin, JPH::Vec3 direction, float maxDistance, JPH::BodyID ignoreBodyID) {
+    const JPH::NarrowPhaseQuery& query = physicsSystem->GetNarrowPhaseQuery();
+
+    JPH::RRayCast ray(origin, direction * maxDistance);
+    JPH::RayCastResult hitResult;
+
+    JPH::IgnoreSingleBodyFilter bodyFilter(ignoreBodyID);
+    bool hit = query.CastRay(ray, hitResult, {}, {}, bodyFilter);
+
+
+    RayResult result;
+    result.hit = hit;
+    result.distance = hit ? hitResult.mFraction * maxDistance : 0.0f;
+    return result;
+}

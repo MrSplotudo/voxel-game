@@ -1,6 +1,9 @@
 #include "game.h"
 #include "camera.h"
 #include "processInput.h"
+#include "character.h"
+#include "projectile_manager.h"
+#include "input_state.h"
 #include "../engine/vulkan_context.h"
 #include "../engine/vulkan_swapchain.h"
 #include "../engine/vulkan_pipeline.h"
@@ -9,9 +12,8 @@
 #include "../engine/vulkan_vertex.h"
 #include "../engine/physics_world.h"
 #include "../engine/debug_ui.h"
+#include "../engine/scene_loader.h"
 #include <iostream>
-
-#include "Jolt/Physics/Body/MotionType.h"
 
 void Game::run() {
     initEngine();
@@ -28,7 +30,7 @@ void Game::initEngine() {
 
     window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan App", nullptr, nullptr);
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
     vulkanContext = new VulkanContext(window);
 
@@ -44,38 +46,25 @@ void Game::initEngine() {
     physicsWorld = new PhysicsWorld();
     physicsWorld->create();
 
+    sceneLoader = new SceneLoader(vulkanContext, vulkanPipeline, physicsWorld);
+
     debugUI = new DebugUI(window, vulkanContext->getInstance(), vulkanContext->getPhysicalDevice(), vulkanContext->getDevice(), vulkanContext->getGraphicsQueue(), vulkanPipeline->getRenderPass(), vulkanSwapchain->getImages().size(), vulkanContext->findQueueFamilies(vulkanContext->getPhysicalDevice()).graphicsFamily);
     debugUI->create();
 
-    processInput = new ProcessInput();
+    processInput = new ProcessInput(window, physicsWorld->getBodyInterface());
 }
 
 void Game::initGame() {
-    auto [gunMesh, gunIndices] = loadMesh("../assets/models/gun3.obj", vulkanContext->getDevice(), vulkanContext->getPhysicalDevice());
+    sceneLoader->load("../levels/lab.json", gameObjects);
 
-    JPH::BodyID gunID = physicsWorld->createBody(
-        JPH::Vec3(0.0f, 0.0f, 0.0f),
-        JPH::Vec3(0.5f, 0.5f, 0.5f),
-        JPH::EMotionType::Static,
-        Layers::STATIC);
+    character = new Character(vulkanContext, vulkanPipeline, physicsWorld);
+    character->spawn({0.0f, 10.0f, 0.0f});
 
-    VulkanTexture* gunTexture = new VulkanTexture(
-        vulkanContext->getDevice(),
-        vulkanContext->getPhysicalDevice(),
-        vulkanContext->getGraphicsQueue(),
-        vulkanContext->findQueueFamilies(vulkanContext->getPhysicalDevice()).graphicsFamily);
+    projectileManager = new ProjectileManager(physicsWorld, vulkanContext, vulkanPipeline);
+    projectileManager->init("../assets/models/bullet.obj", "../assets/textures/bullet_texture.png");
 
-    gunTexture->load("../assets/textures/gun_texture3.png", vulkanPipeline->getDescriptorSetLayout());
-
-    gameObjects.push_back({
-    glm::vec3(0.0f, 0.0f, 0.0f),
-    glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
-    glm::vec3(1.0f, 1.0f, 1.0f),
-    gunID, gunMesh, gunIndices, gunTexture});
-
-    camera = new Camera(glm::vec3(-10.0f, 4.0f, 0.0f));
+    camera = new Camera(glm::vec3(0.0f, 3.0f, 9.0f));
 }
-
 void Game::mainLoop() {
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
@@ -83,28 +72,9 @@ void Game::mainLoop() {
         lastFrame = currentFrame;
 
         glfwPollEvents();
+        InputState input = processInput->getInputState();
 
-        // Mouse input
-        double mouseX, mouseY;
-        glfwGetCursorPos(window, &mouseX, &mouseY);
-        if (firstMouse) {
-            lastMouseX = mouseX;
-            lastMouseY = mouseY;
-            firstMouse = false;
-        }
-        processInput->processMouse(mouseX - lastMouseX, mouseY - lastMouseY, camera->yaw, camera->pitch);
-        lastMouseX = mouseX;
-        lastMouseY = mouseY;
-
-        // Keyboard input
-        processInput->processKeyboard(window, deltaTime, camera->position, camera->yaw, camera->pitch, 5.0f);
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-            glfwSetWindowShouldClose(window, true);
-        }
-
-        physicsWorld->update(deltaTime);
-
-        // Sync objects to Jolt physics world
+        // Sync object positions
         for (auto& object : gameObjects) {
             if (object.bodyID.IsInvalid()) {
                 continue;
@@ -116,13 +86,44 @@ void Game::mainLoop() {
             object.transform.rotation = glm::quat(physRot.GetW(), physRot.GetX(), physRot.GetY(), physRot.GetZ());
         }
 
+        // Sync character position
+        JPH::Vec3 physPos = physicsWorld->getPosition(character->object.bodyID);
+        JPH::Quat physRot = physicsWorld->getRotation(character->object.bodyID);
+        character->object.transform.position = glm::vec3(physPos.GetX(), physPos.GetY(), physPos.GetZ());
+        character->object.transform.rotation = glm::quat(physRot.GetW(), physRot.GetX(), physRot.GetY(), physRot.GetZ());
+        glm::vec3 playerPos = character->object.transform.position;
+
+        glm::vec3 crosshairWorldPos = processInput->getWorldCursorPos(camera->getViewMatrix(), glm::perspective(glm::radians(85.0f), static_cast<float>(WIDTH) / HEIGHT, 0.1f, 100.0f), WIDTH, HEIGHT);
+
+        glm::vec3 aimOrigin = playerPos + character->gunOffset;
+        glm::vec3 toTarget = crosshairWorldPos - aimOrigin;
+        glm::vec3 fireDirection = glm::normalize(toTarget);
+        fireDirection.z = 0.0f; // enforce 2D
+
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            ProjectileProperties props;
+            props.speed   = 60.0f;
+            props.lifespan = 1.0f;
+
+            glm::vec3 spawnPos = character->getBarrelTip();
+            projectileManager->spawn(spawnPos, fireDirection, props);
+        }
+
+        physicsWorld->update(deltaTime);
+        character->update(deltaTime, input);
+        character->updateGun(fireDirection);
+        projectileManager->update(deltaTime);
 
         debugUI->beginFrame();
         ImGui::Text("FPS: %.2f", ImGui::GetIO().Framerate);
         ImGui::Text("Objects: %d", (int)gameObjects.size());
         debugUI->endFrame();
 
-        vulkanRenderer->drawObjects(gameObjects, camera->getViewMatrix());
+        std::vector<GameObject> objectsToDraw = gameObjects;
+        objectsToDraw.push_back(character->object);
+        objectsToDraw.push_back(character->gun);
+
+        vulkanRenderer->drawObjects(objectsToDraw, projectileManager->getProjectiles(), camera->getViewMatrix());
     }
 
     vkDeviceWaitIdle(vulkanContext->getDevice());
@@ -138,6 +139,8 @@ void Game::cleanup() {
         delete object.indexBuffer;
         delete object.texture;
     }
+    projectileManager->shutdown();
+    delete projectileManager;
     delete vulkanContext;
     glfwDestroyWindow(window);
     glfwTerminate();
