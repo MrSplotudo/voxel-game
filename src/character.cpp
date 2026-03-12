@@ -1,45 +1,27 @@
 #include "character.h"
+#include "projectile_manager.h"
 #include "../engine/vulkan_context.h"
 #include "../engine/vulkan_pipeline.h"
 #include "../engine/physics_layers.h"
 #include "../engine/physics_world.h"
-
+#include "../engine/asset_cache.h"
 #include "Jolt/Physics/Body/AllowedDOFs.h"
 #include "Jolt/Physics/Body/BodyInterface.h"
 #include "Jolt/Physics/Body/MotionType.h"
 
-Character::Character(VulkanContext* contextIn, VulkanPipeline* pipelineIn, PhysicsWorld* physicsWorldIn) : context(contextIn), pipeline(pipelineIn), physicsWorld(physicsWorldIn) {
-    auto [mesh, indexBuffer] = loadMesh(
-        "../assets/models/barrel.obj",
-        context->getDevice(),
-        context->getPhysicalDevice());
+Character::Character(VulkanContext* contextIn, VulkanPipeline* pipelineIn, PhysicsWorld* physicsWorldIn, AssetCache* assetCacheIn, ProjectileManager* projectileManagerIn)
+: context(contextIn), pipeline(pipelineIn), physicsWorld(physicsWorldIn), assetCache(assetCacheIn), projectileManager(projectileManagerIn){
 
-    object.mesh = mesh;
-    object.indexBuffer = indexBuffer;
-    object.texture = new VulkanTexture(
-        context->getDevice(),
-        context->getPhysicalDevice(),
-        context->getGraphicsQueue(),
-        context->findQueueFamilies(context->getPhysicalDevice()).graphicsFamily);
-    object.texture->load(
-        "../assets/textures/barrel_texture.png",
-        pipeline->getDescriptorSetLayout());
+    auto [characterMesh, characterIndices] = assetCache->getMesh("assets/models/barrel.obj");
+    object.mesh = characterMesh;
+    object.indexBuffer = characterIndices;
+    object.texture = assetCache->getTexture("assets/textures/barrel_texture.png");
 
-
-    auto [gunMesh, gunIndexBuffer] = loadMesh(
-        "../assets/models/gun1911.obj",
-        context->getDevice(),
-        context->getPhysicalDevice());
+    auto [gunMesh, gunIndexBuffer] = assetCache->getMesh("assets/models/gun1911.obj");
     gun.mesh = gunMesh;
+    gun.transform.scale = glm::vec3(2.0f, 2.0f, 2.0f);
     gun.indexBuffer = gunIndexBuffer;
-    gun.texture = new VulkanTexture(
-        context->getDevice(),
-        context->getPhysicalDevice(),
-        context->getGraphicsQueue(),
-        context->findQueueFamilies(context->getPhysicalDevice()).graphicsFamily);
-    gun.texture->load(
-        "../assets/textures/gun1911.png",
-        pipeline->getDescriptorSetLayout());
+    gun.texture = assetCache->getTexture("assets/textures/gun1911.png");
 
     bodyInterface = physicsWorld->getBodyInterface();
 }
@@ -69,26 +51,52 @@ void Character::update(float deltaTime, const InputState& input) {
             velX -= ((friction * (velX > 0.0f ? 1.0f : -1.0f)) * deltaTime);
         }
     }
-
-    // Y movement
-    bool grounded = isGrounded();
+    grounded = isGrounded();
     if (grounded) {
+        bodyInterface->SetGravityFactor(object.bodyID, 1.0f);
+        float heightError = lastGroundDistance - hoverTargetHeight;
+        float springAccel = -hoverStiffness * heightError - hoverDamping * velY;
+        if (springAccel > 0.0f) {
+            velY += springAccel * deltaTime;
+        }
+    }
+
+    if (grounded && !input.jump) {
         jumpsRemaining = jumps;
     }
+
+    if (!grounded) {
+        float gravityMultiplier = velY <= 0.0f ? fallMultiplier : riseMultiplier;
+        if (input.fastFall) {
+            bodyInterface->SetGravityFactor(object.bodyID, gravityMultiplier * 2.0f);
+        } else {
+            bodyInterface->SetGravityFactor(object.bodyID, gravityMultiplier);
+        }
+    }
+
     if (input.jump&& !lastInput.jump && jumpsRemaining > 0) {
         velY = jumpForce;
         jumpsRemaining--;
     }
-    if (!grounded) {
-        float gravityMultiplier = velY <= 0.0f ? fallMultiplier : riseMultiplier;
-        bodyInterface->SetGravityFactor(object.bodyID, gravityMultiplier);
+
+    if (!input.jump && lastInput.jump && velY > 0.0f) {
+        velY *= jumpCutMultiplier;
+    }
+
+    if (input.shoot && timeSinceLastFire > 0.1f) {
+        shoot();
+        timeSinceLastFire = 0.0f;
+    } else {
+        timeSinceLastFire += deltaTime;
     }
 
     lastInput = input;
     bodyInterface->SetLinearVelocity(object.bodyID, JPH::Vec3(velX, velY, 0.0f));
 }
 
-void Character::updateGun(const glm::vec3& aimDirection) {
+void Character::updateGun(const glm::vec3& aimDirectionIn) {
+    aimDirection = aimDirectionIn;
+
     float angle = atan2(aimDirection.y, aimDirection.x);
     gun.transform.rotation = glm::angleAxis(angle, glm::vec3(0.0f, 0.0f, 1.0f));
 
@@ -111,13 +119,47 @@ void Character::despawn() {
     physicsWorld->getBodyInterface()->DestroyBody(object.bodyID);
 }
 
+void Character::shoot() {
+    ProjectileProperties props;
+    props.speed = bulletSpeed;
+    props.lifespan = bulletLifeTime;
+    props.gravity = bulletGravity;
+    props.bounciness = bulletBounciness;
+
+    glm::vec3 spawnPos = getBarrelTip();
+    projectileManager->spawn(spawnPos, aimDirection, props);
+}
+
 glm::vec3 Character::getBarrelTip() {
-    glm::vec3 localForward = gun.transform.rotation * glm::vec3(1.0f, 0.0f, 0.0f);
+    glm::vec3 localForward = gun.transform.rotation * glm::vec3(0.0f, 0.0f, 0.0f);
     return gun.transform.position + localForward * gunBarrelLength;
 }
 
 bool Character::isGrounded() {
-    RayResult result = physicsWorld->castRay(physicsWorld->getPosition(object.bodyID), {0.0f, -1.0f, 0.0f}, 0.55f, object.bodyID);
+    JPH::Vec3 bodyPos = bodyInterface->GetPosition(object.bodyID);
+    float capsuleRadius = 0.5f;
+    JPH::Vec3 rayOffsets[3] = {
+        JPH::Vec3(0.0f, 0.0f, 0.0f),
+        JPH::Vec3(-capsuleRadius, 0.0f, 0.0f),
+        JPH::Vec3(capsuleRadius, 0.0f, 0.0f)
+    };
 
-    return result.hit;
+    lastGroundDistance = hoverRayLength + 1.0f;
+    bool anyHit = false;
+
+    for (int i = 0; i < 3; i++) {
+        RayResult hit = physicsWorld->castRay(
+            bodyPos + rayOffsets[i], JPH::Vec3(0.0f, -1.0f, 0.0f),
+            hoverRayLength, object.bodyID);
+
+        if (hit.hit) {
+            anyHit = true;
+            if (hit.distance < lastGroundDistance) {
+                lastGroundDistance = hit.distance;
+            }
+        }
+    }
+
+    grounded = anyHit && lastGroundDistance < hoverTargetHeight + 0.2f;
+    return grounded;
 }

@@ -26,6 +26,7 @@ set(ENGINE_SOURCES
         engine/debug_ui.cpp
         engine/physics_world.cpp
         engine/scene_loader.cpp
+        engine/asset_cache.cpp
 )
 
 set(GAME_SOURCES

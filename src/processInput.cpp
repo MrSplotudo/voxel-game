@@ -33,5 +33,8 @@ InputState ProcessInput::getInputState() {
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) input.jump = true;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) input.fastFall = true;
 
+    // shoot
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) input.shoot = true;
+
     return input;
 }

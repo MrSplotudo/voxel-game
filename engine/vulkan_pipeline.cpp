@@ -32,10 +32,12 @@ VulkanPipeline::~VulkanPipeline() {
     vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
     vkDestroyRenderPass(device, renderPass, nullptr);
     vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+    vkDestroyDescriptorSetLayout(device, uboDescriptorSetLayout, nullptr);
 }
 
 void VulkanPipeline::createPipeline() {
     createDescriptorSetLayout();
+    createUBODescriptorSetLayout();
     createRenderPass();
     createGraphicsPipeline();
 }
@@ -195,12 +197,14 @@ void VulkanPipeline::createGraphicsPipeline() {
     VkPushConstantRange pushConstantRange = {};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     pushConstantRange.offset = 0;
-    pushConstantRange.size = sizeof(float) * 16;
+    pushConstantRange.size = sizeof(float) * 32;
+
+    VkDescriptorSetLayout setLayouts[] = { descriptorSetLayout, uboDescriptorSetLayout };
 
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
     pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutCreateInfo.setLayoutCount = 1;
-    pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
+    pipelineLayoutCreateInfo.setLayoutCount = 2;
+    pipelineLayoutCreateInfo.pSetLayouts = setLayouts;
     pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
@@ -246,5 +250,22 @@ void VulkanPipeline::createDescriptorSetLayout() {
 
     if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create descriptor set layout!");
+    }
+}
+
+void VulkanPipeline::createUBODescriptorSetLayout() {
+    VkDescriptorSetLayoutBinding uboBinding = {};
+    uboBinding.binding = 0;
+    uboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uboBinding.descriptorCount = 1;
+    uboBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {};
+    layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutCreateInfo.bindingCount = 1;
+    layoutCreateInfo.pBindings = &uboBinding;
+
+    if (vkCreateDescriptorSetLayout(device, &layoutCreateInfo, nullptr, &uboDescriptorSetLayout) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create UBO descriptor set layout!");
     }
 }

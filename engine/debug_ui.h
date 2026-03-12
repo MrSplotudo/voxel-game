@@ -3,6 +3,8 @@
 #include "imgui.h"
 #include "imgui_impl_vulkan.h"
 #include "imgui_impl_glfw.h"
+#include "../src/game_object.h"
+#include "../src/collision_zone.h"
 
 
 class DebugUI {
@@ -13,6 +15,8 @@ public:
     void create();
     void beginFrame();
     void endFrame();
+
+    void renderHitboxes(glm::mat4 vp, float width, float height, std::vector<GameObject>& gameObjects, std::vector<CollisionZone>& collisionZones);
 
 private:
     GLFWwindow* window;

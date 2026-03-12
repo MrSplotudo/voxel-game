@@ -7,6 +7,7 @@
 #include <Jolt/Physics/PhysicsSystem.h>
 #include "Jolt/Physics/Collision/Shape/BoxShape.h"
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/NarrowPhaseQuery.h>
@@ -55,11 +56,14 @@ JPH::BodyID PhysicsWorld::createBody(
     JPH::ShapeRefC finalShape;
 
     if (shape == "capsule") {
-        // halfExtents.GetY() = total half-height, halfExtents.GetX() = radius
         float radius = halfExtents.GetX();
-        float halfHeight = halfExtents.GetY() - radius; // cylindrical part only
+        float halfHeight = halfExtents.GetY() - radius;
         if (halfHeight < 0.01f) halfHeight = 0.01f;
         JPH::CapsuleShapeSettings shapeSettings(halfHeight, radius);
+        finalShape = shapeSettings.Create().Get();
+    } else if (shape == "sphere") {
+        float radius = halfExtents.GetX();
+        JPH::SphereShapeSettings shapeSettings(radius);
         finalShape = shapeSettings.Create().Get();
     } else {
         JPH::BoxShapeSettings shapeSettings(halfExtents);

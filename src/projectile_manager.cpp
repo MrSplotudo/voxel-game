@@ -47,15 +47,16 @@ void ProjectileManager::spawn(glm::vec3 position, glm::vec3 direction, Projectil
         JPH::Vec3(radius, radius, radius),
         JPH::EMotionType::Dynamic,
         Layers::DYNAMIC,
-        "box",
-        JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY);
+        "sphere",
+        JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::RotationZ);
 
     glm::vec3 velocity = glm::normalize(direction) * properties.speed;
     physicsWorld->getBodyInterface()->SetLinearVelocity(
         bodyID,
         JPH::Vec3(velocity.x, velocity.y, velocity.z));
 
-    physicsWorld->getBodyInterface()->SetGravityFactor(bodyID, 0.0f);
+    physicsWorld->getBodyInterface()->SetGravityFactor(bodyID, properties.gravity);
+    physicsWorld->getBodyInterface()->SetRestitution(bodyID, properties.bounciness);
 
     Projectile projectile;
     projectile.bodyID = bodyID;
@@ -70,28 +71,38 @@ void ProjectileManager::spawn(glm::vec3 position, glm::vec3 direction, Projectil
 }
 
 void ProjectileManager::update(float deltaTime) {
+    bool anyMarked = false;
+
     for (auto& projectile : projectiles) {
         projectile.age += deltaTime;
 
         if (projectile.age >= projectile.properties.lifespan) {
             projectile.markedForDeletion = true;
+            anyMarked = true;
         }
 
         if (!projectile.markedForDeletion) {
             JPH::Vec3 physPos = physicsWorld->getPosition(projectile.bodyID);
-            JPH::Quat physRot = physicsWorld->getRotation(projectile.bodyID);
             projectile.transform.position = glm::vec3(physPos.GetX(), physPos.GetY(), physPos.GetZ());
-            projectile.transform.rotation = glm::quat(physRot.GetW(), physRot.GetX(), physRot.GetY(), physRot.GetZ());
+            JPH::Vec3 vel = physicsWorld->getBodyInterface()->GetLinearVelocity(projectile.bodyID);
+            float speed = vel.Length();
+            if (speed > 0.01f) {
+                float angle = atan2(vel.GetY(), vel.GetX());
+                projectile.transform.rotation = glm::angleAxis(angle, glm::vec3(0.0f, 0.0f, 1.0f));
+            }
         }
     }
 
     // Clean up bodies before erasing
-    for (auto& projectile : projectiles) {
-        if (projectile.markedForDeletion) {
-            destroyProjectile(projectile);
+    if (anyMarked) {
+        for (auto& projectile : projectiles) {
+            if (projectile.markedForDeletion) {
+                destroyProjectile(projectile);
+            }
         }
     }
 
+{}
     std::erase_if(projectiles, [](const Projectile& projectile) {
         return projectile.markedForDeletion;
     });

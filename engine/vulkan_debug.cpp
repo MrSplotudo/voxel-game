@@ -1,6 +1,8 @@
 #include "vulkan_debug.h"
+
 // Std
 #include <iostream>
+
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

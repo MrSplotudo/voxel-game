@@ -12,8 +12,10 @@ struct ProjectileProperties {
     float speed = 20.0f;
     float size = 0.2f;
     float lifespan = 10.0f;
+    float gravity = 4.0f;
+    float bounciness = 1.0f;
     int bouncesRemaining = 0;
-    glm::vec3 color = {1.0f, 1.0f, 0.0f};
+
 };
 
 struct Projectile {

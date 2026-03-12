@@ -3,7 +3,11 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include "game_object.h"
+#include "visual_object.h"
+#include "collision_zone.h"
 #include "projectile_manager.h"
+#include "palette_entry.h"
+#include "../engine/lighting_ubo.h"
 
 class VulkanContext;
 class VulkanSwapchain;
@@ -12,6 +16,7 @@ class VulkanRenderer;
 class VulkanTexture;
 class VulkanBuffer;
 class PhysicsWorld;
+class AssetCache;
 class SceneLoader;
 class Character;
 class ProjectileManager;
@@ -19,7 +24,21 @@ class Camera;
 class ProcessInput;
 class DebugUI;
 
+enum class EditorTool {
+    PlaceVisual,
+    DragCollisionZone,
+    SelectElement
+};
+
+enum class DragState {
+    Idle,
+    Dragging
+};
+
 class Game {
+    const uint32_t WIDTH = 2550;
+    const uint32_t HEIGHT = 1440;
+
 public:
     void run();
 
@@ -27,6 +46,8 @@ private:
     void initEngine();
     void initGame();
     void mainLoop();
+    void updatePlayMode(float deltaTime);
+    void updateEditorMode(float deltaTime);
     void cleanup();
 
     GLFWwindow* window = nullptr;
@@ -37,12 +58,21 @@ private:
     DebugUI* debugUI = nullptr;
 
     PhysicsWorld* physicsWorld = nullptr;
+    AssetCache* assetCache = nullptr;
     SceneLoader* sceneLoader = nullptr;
 
+    std::vector<PaletteEntry> palette = {
+        {"Stone Platform", "assets/models/platform.obj", "assets/textures/platform_texture.png"},
+    };
+
     std::vector<GameObject> gameObjects = {};
+    std::vector<VisualObject> visualObjects = {};
+    std::vector<CollisionZone> collisionZones = {};
+
+    LightingUBO lightingData = {};
+
     Character* character = nullptr;
     ProjectileManager* projectileManager = nullptr;
-
     Camera* camera = nullptr;
     ProcessInput* processInput = nullptr;
 
@@ -52,6 +82,14 @@ private:
     double lastMouseY = 400.0;
     bool firstMouse = true;
 
-    const uint32_t WIDTH = 2550;
-    const uint32_t HEIGHT = 1440;
+    bool editMode = false;
+    bool drawHitboxes = false;
+    std::string levelName = "";
+
+    EditorTool currentTool = EditorTool::PlaceVisual;
+    DragState dragState = DragState::Idle;
+    glm::vec3 dragStart = {};
+    int paletteIndex = -1;
+    float gridSize = 1.0f;
 };
+

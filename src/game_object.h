@@ -8,6 +8,7 @@
 
 struct GameObject {
     Transform transform;
+    glm::vec3 halfExtents;
     JPH::BodyID bodyID;
     VulkanBuffer* mesh;
     VulkanBuffer* indexBuffer;
