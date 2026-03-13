@@ -14,6 +14,7 @@ struct ProjectileProperties {
     float lifespan = 10.0f;
     float gravity = 4.0f;
     float bounciness = 1.0f;
+    int bounces = 0;
     int bouncesRemaining = 0;
 
 };

@@ -1,4 +1,5 @@
 #include "physics_world.h"
+#include "contact_listener.h"
 #include <Jolt/RegisterTypes.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/Core/TempAllocator.h>
@@ -29,6 +30,9 @@ void PhysicsWorld::create() {
     physicsSystem->SetGravity(JPH::Vec3(0.0f, -10.0f, 0.0f));
 
     bodyInterface = &physicsSystem->GetBodyInterface();
+
+    myContactListener = new MyContactListener();
+    physicsSystem->SetContactListener(myContactListener);
 }
 
 void PhysicsWorld::update(float deltaTime) {

@@ -27,6 +27,7 @@ set(ENGINE_SOURCES
         engine/physics_world.cpp
         engine/scene_loader.cpp
         engine/asset_cache.cpp
+        engine/contact_listener.cpp
 )
 
 set(GAME_SOURCES

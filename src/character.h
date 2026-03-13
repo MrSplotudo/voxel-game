@@ -63,10 +63,11 @@ public:
     InputState lastInput;
     ProjectileProperties projectile;
 
-    float bulletSpeed = 10.0f;
-    float bulletLifeTime = 1.0f;
+    float bulletSpeed = 30.0f;
+    float bulletLifeTime = 10.0f;
     float bulletGravity = 10.0f;
-    float bulletBounciness = 1.0f;
+    int bounces = 2;
+    float bulletBounciness = 0.8f;
 
 private:
     VulkanContext* context;

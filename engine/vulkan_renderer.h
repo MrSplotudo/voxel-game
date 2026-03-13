@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <vector>
+#include <deque>
 #include "lighting_ubo.h"
 #include "../src/game_object.h"
 #include "../src/visual_object.h"
@@ -20,7 +21,7 @@ public:
     ~VulkanRenderer();
 
     void create();
-    void drawObjects(const std::vector<GameObject>& objects, const std::vector<VisualObject>& visualObjects, const std::vector<Projectile>& projectiles, const glm::mat4& viewMatrix);
+    void drawObjects(const std::vector<GameObject>& objects, const std::vector<VisualObject>& visualObjects, const std::deque<std::unique_ptr<Projectile>>& projectiles, const glm::mat4& viewMatrix);
 
     void updateLighting(const LightingUBO& data);
 
@@ -31,7 +32,7 @@ private:
     void createCommandBuffers();
     void createSyncObjects();
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, const std::vector<GameObject>& objects,
-        const std::vector<VisualObject>& visualObjects, const std::vector<Projectile>& projectiles, const glm::mat4& viewMatrix);
+        const std::vector<VisualObject>& visualObjects, const std::deque<std::unique_ptr<Projectile>>& projectiles, const glm::mat4& viewMatrix);
 
 
 

@@ -68,6 +68,17 @@ void Game::initEngine() {
     assetCache = new AssetCache(vulkanContext, vulkanPipeline);
     sceneLoader = new SceneLoader(vulkanContext, vulkanPipeline, physicsWorld, assetCache);
 
+    physicsWorld->getContactListener()->onContact = [](const JPH::Body& body1, const JPH::Body& body2) {
+        if (body1.GetUserData()) {
+            Projectile* projectile = reinterpret_cast<Projectile*>(body1.GetUserData());
+            projectile->properties.bouncesRemaining--;
+        }
+        if (body2.GetUserData()) {
+            Projectile* projectile = reinterpret_cast<Projectile*>(body2.GetUserData());
+            projectile->properties.bouncesRemaining--;
+        }
+    };
+
     debugUI = new DebugUI(window, vulkanContext->getInstance(), vulkanContext->getPhysicalDevice(), vulkanContext->getDevice(), vulkanContext->getGraphicsQueue(), vulkanPipeline->getRenderPass(), vulkanSwapchain->getImages().size(), vulkanContext->findQueueFamilies(vulkanContext->getPhysicalDevice()).graphicsFamily);
     debugUI->create();
 
@@ -80,11 +91,11 @@ void Game::initGame() {
     projectileManager = new ProjectileManager(physicsWorld, vulkanContext, vulkanPipeline);
     projectileManager->init("../assets/models/bullet.obj", "../assets/textures/bullet_texture.png");
 
-
     character = new Character(vulkanContext, vulkanPipeline, physicsWorld, assetCache, projectileManager);
     character->spawn({0.0f, 20.0f, 0.0f});
 
-    camera = new Camera(glm::vec3(0.0f, 3.0f, 9.0f));
+
+    camera = new Camera(glm::vec3(0.0f, 0.0f, 0.0f));
 
     lightingData.lightDirection = glm::vec3(0.3f, 1.0f, 0.5f);
     lightingData.lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -122,12 +133,15 @@ void Game::mainLoop() {
         ImGui::SliderFloat("Ambient strength", &lightingData.ambientStrength, 0.0f, 1.0f);
         ImGui::SliderFloat("Specular strength", &lightingData.specularStrength, 0.0f, 1.0f);
         ImGui::SliderFloat("Shininess", &lightingData.shininess, 0.0f, 1.0f);
+        ImGui::DragFloat("Camera offset Y", &cameraOffsetY, 0.05f);
+        ImGui::DragFloat("Camera offset Z", &cameraOffsetZ, 0.05f);
+        ImGui::DragFloat("BulletSpeed", &character->bulletSpeed, 0.1f);
+        ImGui::DragFloat("BulletLifeTime", &character->bulletLifeTime, 0.1f);
+        ImGui::DragFloat("BulletGravity", &character->bulletGravity, 0.1f);
+        ImGui::DragInt("Bounces", &character->bounces, 1);
+        ImGui::DragFloat("BulletBounciness", &character->bulletBounciness, 0.1f);
         ImGui::Checkbox("Draw Hitboxes", &drawHitboxes);
         ImGui::Checkbox("EditMode", &editMode);
-        ImGui::DragFloat("BulletSpeed", &character->bulletSpeed, 0.1f, 0.0f, 100.0f);
-        ImGui::DragFloat("BulletLifeTime", &character->bulletLifeTime, 0.1f,0.0f, 100.0f);
-        ImGui::DragFloat("BulletGravity", &character->bulletGravity, 0.1f,0.0f, 100.0f);
-        ImGui::DragFloat("BulletBounciness", &character->bulletBounciness, 0.1f,0.0f, 100.0f);
         if (drawHitboxes) {
             debugUI->renderHitboxes(vp, WIDTH, HEIGHT, gameObjects, collisionZones);
         }
@@ -149,10 +163,10 @@ void Game::mainLoop() {
                     paletteIndex = i;
                 }
             }
+
             if (ImGui::Button("Save")) {
                 sceneLoader->save("../levels/", "lab", gameObjects, visualObjects, collisionZones);
             }
-
 
             ImGui::End();
         }
@@ -195,6 +209,8 @@ void Game::updatePlayMode(float deltaTime) {
     character->object.transform.rotation = glm::quat(physRot.GetW(), physRot.GetX(), physRot.GetY(), physRot.GetZ());
     glm::vec3 playerPos = character->object.transform.position;
 
+    camera->position = glm::vec3(playerPos.x, playerPos.y + cameraOffsetY, playerPos.z + cameraOffsetZ);
+
     glm::vec3 aimOrigin = playerPos + character->gunOffset;
     glm::vec3 toTarget = crosshairWorldPos - aimOrigin;
     glm::vec3 fireDirection = glm::normalize(toTarget);
@@ -204,6 +220,8 @@ void Game::updatePlayMode(float deltaTime) {
     if (mouseOnUI){
         input.shoot = false;
     }
+
+
 
     physicsWorld->update(deltaTime);
     character->update(deltaTime, input);

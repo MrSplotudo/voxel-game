@@ -29,10 +29,7 @@ void ProjectileManager::init(const std::string& meshPath, const std::string& tex
 }
 
 void ProjectileManager::shutdown() {
-    for (auto& projectile : projectiles) {
-        destroyProjectile(projectile);
-    }
-    projectiles.clear();
+    
 
     delete sharedMesh;
     delete sharedIndexBuffer;
@@ -58,57 +55,50 @@ void ProjectileManager::spawn(glm::vec3 position, glm::vec3 direction, Projectil
     physicsWorld->getBodyInterface()->SetGravityFactor(bodyID, properties.gravity);
     physicsWorld->getBodyInterface()->SetRestitution(bodyID, properties.bounciness);
 
-    Projectile projectile;
-    projectile.bodyID = bodyID;
-    projectile.mesh = sharedMesh;
-    projectile.indexBuffer = sharedIndexBuffer;
-    projectile.texture = sharedTexture;
-    projectile.properties = properties;
-    projectile.age = 0.0f;
-    projectile.transform.position = position;
+    properties.bouncesRemaining = properties.bounces;
 
-    projectiles.push_back(projectile);
+    auto projectile = std::make_unique<Projectile>();
+    projectile->bodyID = bodyID;
+    projectile->mesh = sharedMesh;
+    projectile->indexBuffer = sharedIndexBuffer;
+    projectile->texture = sharedTexture;
+    projectile->properties = properties;
+    projectile->age = 0.0f;
+    projectile->transform.position = position;
+
+    physicsWorld->getBodyInterface()->SetUserData(bodyID, reinterpret_cast<uint64_t>(projectile.get()));
+
+    projectiles.push_back(std::move(projectile));
 }
 
 void ProjectileManager::update(float deltaTime) {
     bool anyMarked = false;
 
     for (auto& projectile : projectiles) {
-        projectile.age += deltaTime;
+        projectile->age += deltaTime;
 
-        if (projectile.age >= projectile.properties.lifespan) {
-            projectile.markedForDeletion = true;
+        if (projectile->age >= projectile->properties.lifespan || projectile->properties.bouncesRemaining < 0) {
+            projectile->markedForDeletion = true;
             anyMarked = true;
         }
 
-        if (!projectile.markedForDeletion) {
-            JPH::Vec3 physPos = physicsWorld->getPosition(projectile.bodyID);
-            projectile.transform.position = glm::vec3(physPos.GetX(), physPos.GetY(), physPos.GetZ());
-            JPH::Vec3 vel = physicsWorld->getBodyInterface()->GetLinearVelocity(projectile.bodyID);
+        if (!projectile->markedForDeletion) {
+            JPH::Vec3 physPos = physicsWorld->getPosition(projectile->bodyID);
+            projectile->transform.position = glm::vec3(physPos.GetX(), physPos.GetY(), physPos.GetZ());
+            JPH::Vec3 vel = physicsWorld->getBodyInterface()->GetLinearVelocity(projectile->bodyID);
             float speed = vel.Length();
             if (speed > 0.01f) {
                 float angle = atan2(vel.GetY(), vel.GetX());
-                projectile.transform.rotation = glm::angleAxis(angle, glm::vec3(0.0f, 0.0f, 1.0f));
+                projectile->transform.rotation = glm::angleAxis(angle, glm::vec3(0.0f, 0.0f, 1.0f));
             }
         }
     }
-
-    // Clean up bodies before erasing
-    if (anyMarked) {
-        for (auto& projectile : projectiles) {
-            if (projectile.markedForDeletion) {
-                destroyProjectile(projectile);
-            }
+    std::erase_if(projectiles, [this](const std::unique_ptr<Projectile>& projectile)  {
+        if (projectile->markedForDeletion) {
+            physicsWorld->getBodyInterface()->RemoveBody(projectile->bodyID);
+            physicsWorld->getBodyInterface()->DestroyBody(projectile->bodyID);
+            return true;
         }
-    }
-
-{}
-    std::erase_if(projectiles, [](const Projectile& projectile) {
-        return projectile.markedForDeletion;
+        return false;
     });
-}
-
-void ProjectileManager::destroyProjectile(Projectile& projectile) {
-    physicsWorld->getBodyInterface()->RemoveBody(projectile.bodyID);
-    physicsWorld->getBodyInterface()->DestroyBody(projectile.bodyID);
 }

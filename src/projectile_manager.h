@@ -1,6 +1,6 @@
 #pragma once
 #include "projectile.h"
-#include <vector>
+#include <deque>
 
 class PhysicsWorld;
 class VulkanContext;
@@ -16,7 +16,7 @@ public:
     void spawn(glm::vec3 position, glm::vec3 direction, ProjectileProperties properties);
     void update(float deltaTime);
 
-    const std::vector<Projectile>& getProjectiles() const { return projectiles; }
+    const std::deque<std::unique_ptr<Projectile>>& getProjectiles() const { return projectiles; }
 
 private:
     void destroyProjectile(Projectile& projectile);
@@ -25,7 +25,7 @@ private:
     VulkanContext* context;
     VulkanPipeline* pipeline;
 
-    std::vector<Projectile> projectiles;
+    std::deque<std::unique_ptr<Projectile>> projectiles;
 
     VulkanBuffer* sharedMesh = nullptr;
     VulkanBuffer* sharedIndexBuffer = nullptr;

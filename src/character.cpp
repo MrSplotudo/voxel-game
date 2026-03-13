@@ -83,7 +83,7 @@ void Character::update(float deltaTime, const InputState& input) {
         velY *= jumpCutMultiplier;
     }
 
-    if (input.shoot && timeSinceLastFire > 0.1f) {
+    if (input.shoot && timeSinceLastFire > 0.8f) {
         shoot();
         timeSinceLastFire = 0.0f;
     } else {
@@ -124,7 +124,9 @@ void Character::shoot() {
     props.speed = bulletSpeed;
     props.lifespan = bulletLifeTime;
     props.gravity = bulletGravity;
+    props.bounces = bounces;
     props.bounciness = bulletBounciness;
+
 
     glm::vec3 spawnPos = getBarrelTip();
     projectileManager->spawn(spawnPos, aimDirection, props);
