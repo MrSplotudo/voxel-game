@@ -39,4 +39,5 @@ private:
 
     int texWidth = 0;
     int texHeight = 0;
+    uint32_t mipLevels = 1;
 };

@@ -83,7 +83,7 @@ void Character::update(float deltaTime, const InputState& input) {
         velY *= jumpCutMultiplier;
     }
 
-    if (input.shoot && timeSinceLastFire > 0.8f) {
+    if (input.shoot && timeSinceLastFire >= fireCooldown) {
         shoot();
         timeSinceLastFire = 0.0f;
     } else {

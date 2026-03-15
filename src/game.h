@@ -92,7 +92,7 @@ private:
     int paletteIndex = -1;
     float gridSize = 1.0f;
 
-    float cameraOffsetY = 0.0f;
+    float cameraOffsetY = 0.05f;
     float cameraOffsetZ = 9.0f;
 };
 

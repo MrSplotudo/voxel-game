@@ -63,6 +63,7 @@ public:
     InputState lastInput;
     ProjectileProperties projectile;
 
+    float fireCooldown = 0.6f;
     float bulletSpeed = 30.0f;
     float bulletLifeTime = 10.0f;
     float bulletGravity = 10.0f;

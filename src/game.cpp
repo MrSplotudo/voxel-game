@@ -133,13 +133,14 @@ void Game::mainLoop() {
         ImGui::SliderFloat("Ambient strength", &lightingData.ambientStrength, 0.0f, 1.0f);
         ImGui::SliderFloat("Specular strength", &lightingData.specularStrength, 0.0f, 1.0f);
         ImGui::SliderFloat("Shininess", &lightingData.shininess, 0.0f, 1.0f);
-        ImGui::DragFloat("Camera offset Y", &cameraOffsetY, 0.05f);
-        ImGui::DragFloat("Camera offset Z", &cameraOffsetZ, 0.05f);
-        ImGui::DragFloat("BulletSpeed", &character->bulletSpeed, 0.1f);
-        ImGui::DragFloat("BulletLifeTime", &character->bulletLifeTime, 0.1f);
-        ImGui::DragFloat("BulletGravity", &character->bulletGravity, 0.1f);
+        ImGui::DragFloat("Camera offset Y", &cameraOffsetY, 0.001f);
+        ImGui::DragFloat("Camera offset Z", &cameraOffsetZ, 0.001f);
+        ImGui::DragFloat("FireCooldown", &character->fireCooldown, 0.001f);
+        ImGui::DragFloat("BulletSpeed", &character->bulletSpeed, 0.001f);
+        ImGui::DragFloat("BulletLifeTime", &character->bulletLifeTime, 0.001f);
+        ImGui::DragFloat("BulletGravity", &character->bulletGravity, 0.001f);
         ImGui::DragInt("Bounces", &character->bounces, 1);
-        ImGui::DragFloat("BulletBounciness", &character->bulletBounciness, 0.1f);
+        ImGui::DragFloat("BulletBounciness", &character->bulletBounciness, 0.001f);
         ImGui::Checkbox("Draw Hitboxes", &drawHitboxes);
         ImGui::Checkbox("EditMode", &editMode);
         if (drawHitboxes) {
@@ -170,6 +171,18 @@ void Game::mainLoop() {
 
             ImGui::End();
         }
+        ImGui::Begin("Character Movement");
+        ImGui::DragFloat("Max Speed", &character->maxSpeed, 0.001f);
+        ImGui::DragFloat("Acceleration", &character->acceleration, 0.001f);
+        ImGui::DragFloat("Friction", &character->friction, 0.001f);
+        ImGui::DragFloat("Jump Force", &character->jumpForce, 0.001f);
+        ImGui::DragInt("Jumps", &character->jumps);
+        ImGui::DragFloat("Fall Multiplier", &character->fallMultiplier, 0.001f);
+        ImGui::DragFloat("rise Multiplier", &character->riseMultiplier, 0.001f);
+        ImGui::DragFloat("Jump Cut Multiplier", &character->jumpCutMultiplier, 0.001f);
+        ImGui::End();
+
+
 
         debugUI->endFrame();
 
