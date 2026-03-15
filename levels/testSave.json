@@ -1,0 +1,514 @@
+{
+    "collisionZones": [
+        {
+            "halfExtents": [
+                3.5,
+                0.5,
+                0.5
+            ],
+            "position": [
+                -2.0,
+                3.0,
+                0.0
+            ]
+        },
+        {
+            "halfExtents": [
+                2.0,
+                0.5,
+                0.5
+            ],
+            "position": [
+                -7.5,
+                6.0,
+                0.0
+            ]
+        },
+        {
+            "halfExtents": [
+                3.5,
+                0.5,
+                0.5
+            ],
+            "position": [
+                4.0,
+                1.0,
+                0.0
+            ]
+        },
+        {
+            "halfExtents": [
+                2.5,
+                0.5,
+                0.5
+            ],
+            "position": [
+                3.0,
+                7.0,
+                0.0
+            ]
+        }
+    ],
+    "visuals": [
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                -5.0,
+                3.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                -4.0,
+                3.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                -3.0,
+                3.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                -2.0,
+                3.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                -1.0,
+                3.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                -0.0,
+                3.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                1.0,
+                3.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                -6.0,
+                6.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                -7.0,
+                6.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                -8.0,
+                6.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                -9.0,
+                6.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                1.0,
+                1.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                2.0,
+                1.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                3.0,
+                1.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                4.0,
+                1.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                5.0,
+                1.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                6.0,
+                1.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                7.0,
+                1.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                1.0,
+                7.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                2.0,
+                7.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                3.0,
+                7.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                4.0,
+                7.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        },
+        {
+            "mesh": "assets/models/platform.obj",
+            "position": [
+                5.0,
+                7.0,
+                0.0
+            ],
+            "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "texture": "assets/textures/platform_texture.png"
+        }
+    ]
+}
