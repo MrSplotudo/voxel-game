@@ -36,19 +36,20 @@ enum class DragState {
 };
 
 class Game {
-    const uint32_t WIDTH = 2550;
-    const uint32_t HEIGHT = 1440;
+    uint32_t width = 2550;
+    uint32_t height = 1440;
 
 public:
     void run();
-
+    bool framebufferResized = false;
 private:
     void initEngine();
     void initGame();
     void mainLoop();
+    void cleanup();
     void updatePlayMode(float deltaTime);
     void updateEditorMode(float deltaTime);
-    void cleanup();
+    void recreateSwapchain();
 
     GLFWwindow* window = nullptr;
     VulkanContext* vulkanContext = nullptr;

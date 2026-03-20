@@ -24,6 +24,8 @@ public:
     void drawObjects(const std::vector<GameObject>& objects, const std::vector<VisualObject>& visualObjects, const std::deque<std::unique_ptr<Projectile>>& projectiles, const glm::mat4& viewMatrix);
 
     void updateLighting(const LightingUBO& data);
+    void destroyFramebuffers();
+    void recreateFramebuffers();
 
 private:
     void createUBOResources();
@@ -33,8 +35,6 @@ private:
     void createSyncObjects();
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, const std::vector<GameObject>& objects,
         const std::vector<VisualObject>& visualObjects, const std::deque<std::unique_ptr<Projectile>>& projectiles, const glm::mat4& viewMatrix);
-
-
 
     VulkanContext* context;
     VulkanSwapchain* swapchain;

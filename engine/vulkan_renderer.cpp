@@ -42,7 +42,8 @@ void VulkanRenderer::drawObjects(const std::vector<GameObject>& objects, const s
     vkResetFences(context->getDevice(), 1, &inFlightFences[currentFrame]);
 
     uint32_t imageIndex;
-    vkAcquireNextImageKHR(context->getDevice(), swapchain->getHandle(), UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+    VkResult acquireNextImageResult = vkAcquireNextImageKHR(context->getDevice(), swapchain->getHandle(), UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+
     vkResetCommandBuffer(commandBuffers[imageIndex], 0);
     recordCommandBuffer(commandBuffers[imageIndex], imageIndex, objects, visualObjects, projectiles, viewMatrix);
 
@@ -75,7 +76,7 @@ void VulkanRenderer::drawObjects(const std::vector<GameObject>& objects, const s
     presentInfo.pSwapchains = swapchains;
     presentInfo.pImageIndices = &imageIndex;
 
-    vkQueuePresentKHR(context->getGraphicsQueue(), &presentInfo);
+    VkResult queuePresentResult = vkQueuePresentKHR(context->getGraphicsQueue(), &presentInfo);
 
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
@@ -275,14 +276,28 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
     vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getGraphicsPipeline());
 
+    VkViewport viewport = {};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(swapchain->getExtent().width);
+    viewport.height = static_cast<float>(swapchain->getExtent().height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+    VkRect2D scissor = {};
+    scissor.offset = {0, 0};
+    scissor.extent = swapchain->getExtent();
+    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
         pipeline->getPipelineLayout(), 1, 1, &uboDescriptorSets[currentFrame], 0, nullptr);
 
     glm::mat4 projection = glm::perspective(
-        glm::radians(85.0f),
-        static_cast<float>(width) / static_cast<float>(height),
-        0.1f,
-        100.0f);
+    glm::radians(85.0f),
+    static_cast<float>(swapchain->getExtent().width) / static_cast<float>(swapchain->getExtent().height),
+    0.1f,
+    100.0f);
 
     projection[1][1] *= -1;
 
@@ -369,4 +384,15 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
     if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("Failed to end command buffer!");
     }
+}
+
+void VulkanRenderer::destroyFramebuffers() {
+    for (auto framebuffer : swapchainFramebuffers) {
+        vkDestroyFramebuffer(context->getDevice(), framebuffer, nullptr);
+    }
+    swapchainFramebuffers.clear();
+}
+
+void VulkanRenderer::recreateFramebuffers() {
+    createFramebuffers();
 }

@@ -141,24 +141,12 @@ void VulkanPipeline::createGraphicsPipeline() {
     inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     inputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
 
-    VkViewport viewport = {};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = static_cast<float>(swapchainExtent.width);
-    viewport.height = static_cast<float>(swapchainExtent.height);
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-
-    VkRect2D scissor = {};
-    scissor.offset = {0, 0};
-    scissor.extent = swapchainExtent;
-
     VkPipelineViewportStateCreateInfo viewportStateCreateInfo = {};
     viewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     viewportStateCreateInfo.viewportCount = 1;
-    viewportStateCreateInfo.pViewports = &viewport;
+    viewportStateCreateInfo.pViewports = nullptr; // The command buffer will provide
     viewportStateCreateInfo.scissorCount = 1;
-    viewportStateCreateInfo.pScissors = &scissor;
+    viewportStateCreateInfo.pScissors = nullptr; // The command buffer will provide
 
     VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo = {};
     rasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -212,6 +200,13 @@ void VulkanPipeline::createGraphicsPipeline() {
         throw std::runtime_error("Failed to create pipeline layout!");
     }
 
+    VkDynamicState dynamicStates[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+
+    VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo = {};
+    dynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dynamicStateCreateInfo.dynamicStateCount = 2;
+    dynamicStateCreateInfo.pDynamicStates = dynamicStates;
+
     VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {};
     graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     graphicsPipelineCreateInfo.stageCount = 2;
@@ -226,6 +221,7 @@ void VulkanPipeline::createGraphicsPipeline() {
     graphicsPipelineCreateInfo.layout = pipelineLayout;
     graphicsPipelineCreateInfo.renderPass = renderPass;
     graphicsPipelineCreateInfo.subpass = 0;
+    graphicsPipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
 
     if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, nullptr, &graphicsPipeline) !=
         VK_SUCCESS) {

@@ -16,6 +16,11 @@
 #include "../engine/scene_loader.h"
 #include <iostream>
 
+void framebufferSizeCallback(GLFWwindow* w, int width, int height) {
+    Game* game = static_cast<Game*>(glfwGetWindowUserPointer(w));
+    game->framebufferResized = true;
+}
+
 void Game::run() {
     initEngine();
     initGame();
@@ -45,21 +50,24 @@ void Game::initEngine() {
     glfwInit();
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-    window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan App", nullptr, nullptr);
+    window = glfwCreateWindow(width, height, "Vulkan App", nullptr, nullptr);
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+    glfwSetWindowUserPointer(window, this);
+
+    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
     vulkanContext = new VulkanContext(window);
 
     vulkanSwapchain = new VulkanSwapchain(vulkanContext->getPhysicalDevice(), vulkanContext->getDevice(), vulkanContext->getSurface());
-    vulkanSwapchain->create(WIDTH, HEIGHT);
+    vulkanSwapchain->create(width, height);
 
     vulkanPipeline = new VulkanPipeline(vulkanContext->getDevice(),vulkanSwapchain->getImageFormat(),vulkanSwapchain->getExtent());
     vulkanPipeline->createPipeline();
 
-    vulkanRenderer = new VulkanRenderer(vulkanContext, vulkanSwapchain, vulkanPipeline, WIDTH, HEIGHT);
+    vulkanRenderer = new VulkanRenderer(vulkanContext, vulkanSwapchain, vulkanPipeline, width, height);
     vulkanRenderer->create();
 
     physicsWorld = new PhysicsWorld();
@@ -110,11 +118,17 @@ void Game::mainLoop() {
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
+        if (deltaTime > 0.05f) deltaTime = 0.05f;
+
         glfwPollEvents();
+
+        if (framebufferResized) {
+            recreateSwapchain();
+        }
 
         glm::mat4 projection = glm::perspective(
                 glm::radians(85.0f),
-                static_cast<float>(WIDTH) / static_cast<float>(HEIGHT),
+                static_cast<float>(width) / static_cast<float>(height),
                 0.1f, 100.0f);
         projection[1][1] *= -1;  // Vulkan Y-flip, must match renderer
         glm::mat4 vp = projection * camera->getViewMatrix();
@@ -144,7 +158,7 @@ void Game::mainLoop() {
         ImGui::Checkbox("Draw Hitboxes", &drawHitboxes);
         ImGui::Checkbox("EditMode", &editMode);
         if (drawHitboxes) {
-            debugUI->renderHitboxes(vp, WIDTH, HEIGHT, gameObjects, collisionZones);
+            debugUI->renderHitboxes(vp, width, height, gameObjects, collisionZones);
         }
 
         if (editMode) {
@@ -201,7 +215,7 @@ void Game::mainLoop() {
 
 void Game::updatePlayMode(float deltaTime) {
     InputState input = processInput->getInputState();
-    glm::vec3 crosshairWorldPos = processInput->getWorldCursorPos(camera->getViewMatrix(), glm::perspective(glm::radians(85.0f), static_cast<float>(WIDTH) / HEIGHT, 0.1f, 100.0f), WIDTH, HEIGHT);
+    glm::vec3 crosshairWorldPos = processInput->getWorldCursorPos(camera->getViewMatrix(), glm::perspective(glm::radians(85.0f), static_cast<float>(width) / height, 0.1f, 100.0f), width, height);
 
     // Sync object positions
     for (auto& object : gameObjects) {
@@ -243,7 +257,7 @@ void Game::updatePlayMode(float deltaTime) {
 }
 
 void Game::updateEditorMode(float deltaTime) {
-    glm::vec3 cursorWorldPos = processInput->getWorldCursorPos(camera->getViewMatrix(), glm::perspective(glm::radians(85.0f), static_cast<float>(WIDTH) / HEIGHT, 0.1f, 100.0f), WIDTH, HEIGHT);
+    glm::vec3 cursorWorldPos = processInput->getWorldCursorPos(camera->getViewMatrix(), glm::perspective(glm::radians(85.0f), static_cast<float>(width) / height, 0.1f, 100.0f), width, height);
     cursorWorldPos.z = 0.0f;
 
     bool mouseDown = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
@@ -357,4 +371,29 @@ void Game::updateEditorMode(float deltaTime) {
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera->position.x -= camSpeed * deltaTime;
 }
 
+void Game::recreateSwapchain() {
+    // Handle minimization — wait until the window has real dimensions
+    int w = 0, h = 0;
+    glfwGetFramebufferSize(window, &w, &h);
+    while (w == 0 || h == 0) {
+        glfwGetFramebufferSize(window, &w, &h);
+        glfwWaitEvents();
+    }
 
+    // Wait for GPU to finish all work
+    vkDeviceWaitIdle(vulkanContext->getDevice());
+
+    // Destroy in dependency order
+    vulkanRenderer->destroyFramebuffers();
+    vulkanSwapchain->cleanup();
+
+    // Update stored dimensions
+    width = static_cast<uint32_t>(w);
+    height = static_cast<uint32_t>(h);
+
+    // Recreate in reverse order
+    vulkanSwapchain->create(width, height);
+    vulkanRenderer->recreateFramebuffers();
+
+    framebufferResized = false;
+}
