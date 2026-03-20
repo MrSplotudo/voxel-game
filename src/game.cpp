@@ -121,6 +121,14 @@ void Game::mainLoop() {
         if (deltaTime > 0.05f) deltaTime = 0.05f;
 
         glfwPollEvents();
+        input = processInput->getInputState();
+
+        if (input.toggleFullscreen && !holdingFullscreen) {
+            holdingFullscreen = true;
+            toggleFullscreen();
+        } else if (!input.toggleFullscreen && holdingFullscreen) {
+            holdingFullscreen = false;
+        }
 
         if (framebufferResized) {
             recreateSwapchain();
@@ -213,8 +221,59 @@ void Game::mainLoop() {
     vkDeviceWaitIdle(vulkanContext->getDevice());
 }
 
+void Game::recreateSwapchain() {
+    // Handle minimization — wait until the window has real dimensions
+    int w = 0, h = 0;
+    glfwGetFramebufferSize(window, &w, &h);
+    while (w == 0 || h == 0) {
+        glfwGetFramebufferSize(window, &w, &h);
+        glfwWaitEvents();
+    }
+
+    // Wait for GPU to finish all work
+    vkDeviceWaitIdle(vulkanContext->getDevice());
+
+    // Destroy in dependency order
+    vulkanRenderer->destroyFramebuffers();
+    vulkanSwapchain->cleanup();
+
+    // Update stored dimensions
+    width = static_cast<uint32_t>(w);
+    height = static_cast<uint32_t>(h);
+
+    // Recreate in reverse order
+    vulkanSwapchain->create(width, height);
+    vulkanRenderer->recreateFramebuffers();
+
+    framebufferResized = false;
+}
+
+void Game::toggleFullscreen() {
+    if (!isFullscreen) {
+        isFullscreen = true;
+
+        prevHeight = height;
+        prevWidth = width;
+        width = glfwGetVideoMode(glfwGetPrimaryMonitor()) -> width;
+        height = glfwGetVideoMode(glfwGetPrimaryMonitor()) -> height;
+        glfwGetWindowPos(window, &prevWindowPosX, &prevWindowPosY);
+
+        glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_FALSE);
+        glfwSetWindowPos(window, 0, 0);
+        glfwSetWindowSize(window, width, height);
+    } else {
+        isFullscreen = false;
+
+        width = prevWidth;
+        height = prevHeight;
+
+        glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
+        glfwSetWindowPos(window, prevWindowPosX, prevWindowPosY);
+        glfwSetWindowSize(window, width, height);
+    }
+}
+
 void Game::updatePlayMode(float deltaTime) {
-    InputState input = processInput->getInputState();
     glm::vec3 crosshairWorldPos = processInput->getWorldCursorPos(camera->getViewMatrix(), glm::perspective(glm::radians(85.0f), static_cast<float>(width) / height, 0.1f, 100.0f), width, height);
 
     // Sync object positions
@@ -371,29 +430,3 @@ void Game::updateEditorMode(float deltaTime) {
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera->position.x -= camSpeed * deltaTime;
 }
 
-void Game::recreateSwapchain() {
-    // Handle minimization — wait until the window has real dimensions
-    int w = 0, h = 0;
-    glfwGetFramebufferSize(window, &w, &h);
-    while (w == 0 || h == 0) {
-        glfwGetFramebufferSize(window, &w, &h);
-        glfwWaitEvents();
-    }
-
-    // Wait for GPU to finish all work
-    vkDeviceWaitIdle(vulkanContext->getDevice());
-
-    // Destroy in dependency order
-    vulkanRenderer->destroyFramebuffers();
-    vulkanSwapchain->cleanup();
-
-    // Update stored dimensions
-    width = static_cast<uint32_t>(w);
-    height = static_cast<uint32_t>(h);
-
-    // Recreate in reverse order
-    vulkanSwapchain->create(width, height);
-    vulkanRenderer->recreateFramebuffers();
-
-    framebufferResized = false;
-}

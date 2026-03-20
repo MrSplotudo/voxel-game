@@ -7,4 +7,6 @@ struct InputState {
     bool fastFall = false;
 
     bool shoot = false;
+
+    bool toggleFullscreen = false;
 };

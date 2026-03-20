@@ -8,6 +8,7 @@
 #include "projectile_manager.h"
 #include "palette_entry.h"
 #include "../engine/lighting_ubo.h"
+#include "input_state.h"
 
 class VulkanContext;
 class VulkanSwapchain;
@@ -36,20 +37,23 @@ enum class DragState {
 };
 
 class Game {
-    uint32_t width = 2550;
-    uint32_t height = 1440;
-
 public:
     void run();
+
     bool framebufferResized = false;
+
 private:
     void initEngine();
     void initGame();
     void mainLoop();
     void cleanup();
+
+    void recreateSwapchain();
+    void toggleFullscreen();
+
     void updatePlayMode(float deltaTime);
     void updateEditorMode(float deltaTime);
-    void recreateSwapchain();
+
 
     GLFWwindow* window = nullptr;
     VulkanContext* vulkanContext = nullptr;
@@ -66,6 +70,17 @@ private:
         {"Stone Platform", "assets/models/platform.obj", "assets/textures/platform_texture.png"},
     };
 
+    bool isFullscreen = false;
+    bool holdingFullscreen = false;
+    uint32_t width = 2550;
+    uint32_t height = 1440;
+    uint32_t prevWidth = 0;
+    uint32_t prevHeight = 0;
+    int prevWindowPosX = 0;
+    int prevWindowPosY = 0;
+
+    InputState input;
+
     std::vector<GameObject> gameObjects = {};
     std::vector<VisualObject> visualObjects = {};
     std::vector<CollisionZone> collisionZones = {};
@@ -75,6 +90,7 @@ private:
     Character* character = nullptr;
     ProjectileManager* projectileManager = nullptr;
     Camera* camera = nullptr;
+
     ProcessInput* processInput = nullptr;
 
     float lastFrame = 0.0f;

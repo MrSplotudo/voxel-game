@@ -36,5 +36,8 @@ InputState ProcessInput::getInputState() {
     // shoot
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) input.shoot = true;
 
+    // toggle fullscreen
+    if (glfwGetKey(window, GLFW_KEY_F11) == GLFW_PRESS) input.toggleFullscreen = true;
+
     return input;
 }
